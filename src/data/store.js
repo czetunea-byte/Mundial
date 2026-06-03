@@ -60,13 +60,13 @@ function genId() {
 // --------------------------- colecciones (listas) ---------------------------
 // name: "members" | "contributions" | "expenses"
 
-export function subscribeCollection(name, cb) {
+export function subscribeCollection(name, cb, onError) {
   if (isFirebaseConfigured) {
     const q = query(collection(db, name), orderBy("createdAt", "asc"));
     return onSnapshot(
       q,
       (snap) => cb(snap.docs.map((d) => ({ id: d.id, ...d.data() }))),
-      (err) => console.error(`Firestore[${name}]`, err)
+      (err) => { console.error(`Firestore[${name}]`, err); if (onError) onError(err); }
     );
   }
   return lsSubscribe(name, [], cb);
@@ -121,12 +121,12 @@ export async function removeItem(name, id) {
 // ------------------------------- settings -----------------------------------
 const SETTINGS_KEY = "settings";
 
-export function subscribeSettings(cb) {
+export function subscribeSettings(cb, onError) {
   if (isFirebaseConfigured) {
     return onSnapshot(
       doc(db, "meta", SETTINGS_KEY),
       (snap) => cb({ ...DEFAULT_SETTINGS, ...(snap.exists() ? snap.data() : {}) }),
-      (err) => console.error("Firestore[settings]", err)
+      (err) => { console.error("Firestore[settings]", err); if (onError) onError(err); }
     );
   }
   if (!localListeners[SETTINGS_KEY]) localListeners[SETTINGS_KEY] = new Set();

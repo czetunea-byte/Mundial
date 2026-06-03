@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useTheme } from "../theme.jsx";
 import { Avatar } from "./ui.jsx";
 import { DEFAULT_MEMBERS, PHOTOS } from "../config/members";
-import { login, seedAuthUsers, DEFAULT_PASSWORD } from "../utils/auth";
+import { login, DEFAULT_PASSWORD } from "../utils/auth";
 
 export default function Login() {
   const t = useTheme();
@@ -11,8 +11,6 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const [setupOpen, setSetupOpen] = useState(false);
-  const [setupMsg, setSetupMsg] = useState("");
 
   async function entrar(e) {
     e.preventDefault();
@@ -24,30 +22,19 @@ export default function Login() {
       // onAuthStateChanged se encarga del resto
     } catch (err) {
       const code = err.code || "";
-      if (code.includes("invalid-credential") || code.includes("wrong-password")) {
-        setError("Contraseña incorrecta. (La primera vez es " + DEFAULT_PASSWORD + ")");
-      } else if (code.includes("user-not-found")) {
-        setError("Ese usuario aún no existe. Pide al admin que cree los usuarios (abajo).");
+      if (code.includes("wrong-password") || code.includes("invalid-credential")) {
+        setError(`Contraseña incorrecta. (La primera vez es ${DEFAULT_PASSWORD}.)`);
+      } else if (code.includes("weak-password")) {
+        setError(`La primera vez tu contraseña debe tener al menos 6 caracteres (usa ${DEFAULT_PASSWORD}).`);
       } else if (code.includes("too-many-requests")) {
-        setError("Demasiados intentos. Espera un momento.");
+        setError("Demasiados intentos. Espera un momento e intenta de nuevo.");
+      } else if (code.includes("network")) {
+        setError("Sin conexión. Revisa tu internet.");
       } else {
         setError("No se pudo entrar: " + code);
       }
       setBusy(false);
     }
-  }
-
-  async function crearUsuarios() {
-    setBusy(true); setSetupMsg("Creando los 8 usuarios…");
-    try {
-      const res = await seedAuthUsers(DEFAULT_MEMBERS);
-      const nuevos = res.filter((r) => r.created).length;
-      const exist = res.filter((r) => !r.created && r.error && r.error.includes("email-already")).length;
-      setSetupMsg(`Listo ✓ ${nuevos} creados, ${exist} ya existían. Ya pueden entrar con su nombre y la contraseña ${DEFAULT_PASSWORD}.`);
-    } catch (e) {
-      setSetupMsg("Error al crear usuarios: " + (e.code || e.message));
-    }
-    setBusy(false);
   }
 
   const input = {
@@ -93,21 +80,9 @@ export default function Login() {
           </button>
         </form>
 
-        <div style={{ marginTop: 28, paddingTop: 16, borderTop: `1px solid ${t.border}` }}>
-          <button onClick={() => setSetupOpen((o) => !o)} style={{ all: "unset", cursor: "pointer", fontSize: 12, color: t.muted, fontWeight: 700 }}>
-            ⚙️ Primera vez (admin) {setupOpen ? "▲" : "▼"}
-          </button>
-          {setupOpen && (
-            <div style={{ marginTop: 10, fontSize: 12, color: t.muted, lineHeight: 1.5 }}>
-              Crea las cuentas de los 8 integrantes con la contraseña <b style={{ color: t.text }}>{DEFAULT_PASSWORD}</b>.
-              Cada quien la cambia al entrar. (Solo se hace una vez.)
-              <button onClick={crearUsuarios} disabled={busy} style={{ all: "unset", cursor: "pointer", display: "block", textAlign: "center",
-                marginTop: 10, width: "100%", padding: "11px", borderRadius: 12, border: `1px dashed ${t.accent}`, color: t.accent, fontWeight: 800, opacity: busy ? 0.6 : 1 }}>
-                Crear los 8 usuarios
-              </button>
-              {setupMsg && <div style={{ marginTop: 10, color: t.text, fontWeight: 600 }}>{setupMsg}</div>}
-            </div>
-          )}
+        <div style={{ marginTop: 16, fontSize: 11.5, color: t.muted, textAlign: "center", lineHeight: 1.5 }}>
+          La primera vez, escribe <b style={{ color: t.text }}>{DEFAULT_PASSWORD}</b> — esa queda como tu contraseña.
+          Luego la puedes cambiar tocando tu foto. 🔒
         </div>
       </div>
     </div>

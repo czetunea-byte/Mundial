@@ -36,6 +36,7 @@ export const DEFAULT_MEMBERS = [
 
 // Frases echadoras que rotan por semana en el Resumen.
 export const PHRASES = [
+  "¡¡EEEEH!! El fondo va con todo esta semana 🎉⚽",
   "Esta semana hasta el que debe va a pagar 💪",
   "El que no aporta, no va al palco 🏟️",
   "Aguas, que el Mundial no se paga con excusas 😎",

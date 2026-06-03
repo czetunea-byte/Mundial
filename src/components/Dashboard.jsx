@@ -36,7 +36,7 @@ export default function Dashboard({ store, flavor }) {
 
   return (
     <div className="stagger" style={{ display: "flex", flexDirection: "column", gap: 16, padding: "6px 16px 24px" }}>
-      <CountdownHero target={target} subtitle={`Semana ${stats.currentWeek + 1} de ${stats.totalWeeks} · España 2030 🇪🇸🇵🇹🇲🇦`} />
+      <CountdownHero target={target} subtitle={`Semana ${stats.currentWeek + 1} de ${stats.totalWeeks} · ¡rumbo a España 2030! ⚽`} />
 
       <div style={{ display: "flex", gap: 9 }}>
         <Stat t={t} label="Recaudado" val={<>$<CountUp value={stats.totalRaised} /></>} color={t.accent} />

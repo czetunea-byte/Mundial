@@ -13,20 +13,27 @@ export function useFund() {
   const [activity, setActivity] = useState([]);
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [loaded, setLoaded] = useState({ members: false, settings: false });
+  const [error, setError] = useState(null);
 
   useEffect(() => {
+    // Si algo falla (p. ej. reglas no publicadas), guardamos el error y
+    // dejamos de "cargar" para poder mostrar el aviso.
+    const onError = (e) => {
+      setError(e);
+      setLoaded({ members: true, settings: true });
+    };
     const unsubs = [
       subscribeCollection("members", (d) => {
         setRawMembers(d);
         setLoaded((l) => ({ ...l, members: true }));
-      }),
-      subscribeCollection("contributions", setContributions),
-      subscribeCollection("expenses", setExpenses),
-      subscribeCollection("activity", setActivity),
+      }, onError),
+      subscribeCollection("contributions", setContributions, onError),
+      subscribeCollection("expenses", setExpenses, onError),
+      subscribeCollection("activity", setActivity, onError),
       subscribeSettings((s) => {
         setSettings(s);
         setLoaded((l) => ({ ...l, settings: true }));
-      }),
+      }, onError),
     ];
     return () => unsubs.forEach((u) => u && u());
   }, []);
@@ -50,6 +57,7 @@ export function useFund() {
     activity,
     settings,
     stats,
+    error,
     ready: loaded.members && loaded.settings,
   };
 }

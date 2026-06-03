@@ -4,24 +4,21 @@ import { addItem, removeItem, upsertItem, updateSettings } from "../data/store";
 import { DEFAULT_MEMBERS } from "../config/members";
 import { money } from "../utils/format";
 
-const SEED_FLAG = "mundial:seeded:v2";
-
 // Adaptador con IDENTIDAD: expone la API de las pantallas, agrega "dueño del
 // registro" (createdBy), permisos (dueño o admin) y registro de actividad.
 export function useFundStore(user) {
   const fund = useFund();
-  const { members, contributions, expenses, activity, settings, stats, ready } = fund;
+  const { members, contributions, expenses, activity, settings, stats, ready, error } = fund;
 
-  // Siembra el plantel una sola vez (solo el admin tiene permiso de escribirlo).
+  // Siembra el plantel cuando está vacío EN LA NUBE (solo el admin puede
+  // escribirlo). Idempotente: usa ids fijos, así re-ejecutar no duplica.
   useEffect(() => {
-    if (!ready || !user?.isAdmin) return;
+    if (!ready || error || !user?.isAdmin) return;
     if (members.length > 0) return;
-    if (localStorage.getItem(SEED_FLAG)) return;
-    localStorage.setItem(SEED_FLAG, "1");
     DEFAULT_MEMBERS.forEach((m) =>
       upsertItem("members", m.id, { name: m.name, hue: m.hue, createdAt: m.createdAt })
     );
-  }, [ready, user, members.length]);
+  }, [ready, error, user, members.length]);
 
   const actions = useMemo(() => {
     const canEdit = (rec) => user?.isAdmin || (rec && rec.createdBy === user?.id);
@@ -100,6 +97,7 @@ export function useFundStore(user) {
     settings,
     stats,
     ready,
+    error,
     currentUser: user,
     isAdmin: !!user?.isAdmin,
     ...actions,

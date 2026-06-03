@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTheme } from "../theme.jsx";
 import { useFundStore } from "../hooks/useFundStore";
+import { logout } from "../utils/auth";
 import { PHOTOS } from "../config/members";
 import { Avatar } from "./ui.jsx";
 import Dashboard from "./Dashboard.jsx";
@@ -61,7 +62,7 @@ export default function FundShell({ user, themeName, toggleTheme }) {
               boxShadow: themeName === "noche" ? `0 0 16px ${theme.accentGlow}` : "0 2px 6px rgba(0,0,0,0.15)" }}>⚽</span>
             <div>
               <div style={{ fontWeight: 800, fontSize: 15.5, letterSpacing: "-0.01em" }}>Fondo Mundial<span style={{ color: theme.accent }}> 2030</span></div>
-              <div style={{ fontSize: 10.5, color: theme.muted, fontWeight: 600 }}>🦅 ¡Vamos México! · Rumbo a España 2030 🇪🇸</div>
+              <div style={{ fontSize: 10.5, color: theme.muted, fontWeight: 600 }}>🦅 ¡Vamos México! · Rumbo a España 2030</div>
             </div>
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
@@ -83,7 +84,24 @@ export default function FundShell({ user, themeName, toggleTheme }) {
 
         <main style={{ position: "relative", zIndex: 5, flex: 1, minHeight: 0,
           overflowY: tab === "aportaciones" ? "hidden" : "auto" }}>
-          {store.ready ? (
+          {store.error ? (
+            <div style={{ padding: "32px 24px", textAlign: "center", color: theme.text }}>
+              <div style={{ fontSize: 40, marginBottom: 10 }}>🔒</div>
+              <div style={{ fontWeight: 800, fontSize: 17, marginBottom: 8 }}>No se pudo leer la base de datos</div>
+              <div style={{ fontSize: 13, color: theme.muted, lineHeight: 1.55 }}>
+                Firebase respondió <b style={{ color: theme.danger }}>permisos insuficientes</b>.
+                Falta <b style={{ color: theme.text }}>publicar las reglas de seguridad</b> en
+                Firestore (Console → Firestore → Reglas → Publicar), o aún no se ha creado la base de datos.
+              </div>
+              <div style={{ fontSize: 11.5, color: theme.faint, marginTop: 12 }}>Sesión: {user.email}</div>
+              <div style={{ display: "flex", gap: 10, justifyContent: "center", marginTop: 20 }}>
+                <button onClick={() => window.location.reload()} style={{ all: "unset", cursor: "pointer",
+                  background: theme.accent, color: theme.onAccent, fontWeight: 800, fontSize: 13, padding: "11px 18px", borderRadius: 12 }}>Reintentar</button>
+                <button onClick={() => logout()} style={{ all: "unset", cursor: "pointer",
+                  background: theme.surface, color: theme.text, fontWeight: 700, fontSize: 13, padding: "11px 18px", borderRadius: 12, border: `1px solid ${theme.border}` }}>Cerrar sesión</button>
+              </div>
+            </div>
+          ) : store.ready ? (
             <Screen key={tab} store={store} flavor={FLAVOR} />
           ) : (
             <div style={{ textAlign: "center", color: theme.muted, padding: "60px 0" }}>Cargando…</div>
