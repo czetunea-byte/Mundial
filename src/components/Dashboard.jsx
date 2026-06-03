@@ -3,6 +3,7 @@ import { useTheme } from "../theme.jsx";
 import { Avatar, Card, Pill, SectionTitle, ProgressBar, CountdownHero, CountUp } from "./ui.jsx";
 import { money } from "../utils/format";
 import { PHRASES } from "../config/members";
+import { roastFor } from "../utils/roasts";
 import { celebrate, resolveFlavor } from "../utils/fx";
 
 function Stat({ t, label, val, color }) {
@@ -96,7 +97,11 @@ export default function Dashboard({ store, flavor }) {
               <Avatar member={p.member} size={36} badge={false} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontWeight: 800, fontSize: 13, color: t.text }}>{p.member.name}</div>
-                <div style={{ fontSize: 10.5, color: p.owed ? t.danger : t.accent }}>{p.owed ? `debe ${money(p.owed)} 👀` : "al corriente ✓"}</div>
+                <div style={{ fontSize: 10.5, color: p.owed ? t.danger : t.accent, lineHeight: 1.3 }}>
+                  {p.owed
+                    ? `${roastFor(p.pendingWeeks.length, p.member.id, stats.currentWeek)} · debe ${money(p.owed)}`
+                    : "al corriente ✓"}
+                </div>
               </div>
               <span style={{ fontFamily: "Anton", fontSize: 17, color: t.accent }}>{money(p.total)}</span>
             </div>
