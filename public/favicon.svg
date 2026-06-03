@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <clipPath id="r"><rect width="64" height="64" rx="14"/></clipPath>
+  </defs>
+  <g clip-path="url(#r)">
+    <rect width="64" height="64" fill="#006847"/>
+    <!-- franja tricolor inferior -->
+    <rect y="56" width="21.3" height="8" fill="#006847"/>
+    <rect x="21.3" y="56" width="21.3" height="8" fill="#ffffff"/>
+    <rect x="42.6" y="56" width="21.4" height="8" fill="#ce1126"/>
+    <!-- balón -->
+    <circle cx="32" cy="29" r="18" fill="#ffffff" stroke="#0f172a" stroke-width="1.5"/>
+    <polygon points="32,21 38,25.5 35.7,32.5 28.3,32.5 26,25.5" fill="#0f172a"/>
+    <path d="M32 11 L32 21 M50 29 L40 30 M14 29 L24 30 M40 43 L36 34 M24 43 L28 34"
+          stroke="#0f172a" stroke-width="1.5" fill="none"/>
+  </g>
+</svg>

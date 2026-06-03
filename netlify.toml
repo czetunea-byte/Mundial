@@ -1,0 +1,12 @@
+# Configuración para publicar en Netlify (repo puede seguir privado).
+# Netlify detecta este archivo y ya sabe cómo construir y servir la app.
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# La app es de una sola página (SPA): cualquier ruta sirve index.html.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
