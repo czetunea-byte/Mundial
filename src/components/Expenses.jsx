@@ -1,152 +1,79 @@
+// Pantalla GASTOS — lista + alta de gastos del fondo.
 import { useState } from "react";
-import { Card, EmptyState } from "./ui";
-import { formatMoney } from "../utils/format";
-import { formatDate } from "../utils/dates";
-import { addItem, removeItem } from "../data/store";
-import { EXPENSE_CATEGORIES } from "../config/app";
+import { useTheme } from "../theme.jsx";
+import { Card, SectionTitle } from "./ui.jsx";
+import { money } from "../utils/format";
+import { EXPENSE_CATS } from "../config/app";
 
-const todayISO = () => new Date().toISOString().slice(0, 10);
+export default function Expenses({ store }) {
+  const t = useTheme();
+  const { stats, expenses } = store;
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState({ title: "", amount: "", category: "Boletos" });
+  const cats = Object.keys(EXPENSE_CATS);
 
-export default function Expenses({ expenses, settings, stats }) {
-  const [form, setForm] = useState({
-    title: "",
-    amount: "",
-    category: EXPENSE_CATEGORIES[0],
-    date: todayISO(),
-    note: "",
-  });
-
-  const money = (v) => formatMoney(v, settings);
-
-  async function addExpense(e) {
+  function submit(e) {
     e.preventDefault();
-    const amount = Number(form.amount);
-    if (!form.title.trim() || !amount || amount <= 0) return;
-    await addItem("expenses", {
-      title: form.title.trim(),
-      amount,
-      category: form.category,
-      date: form.date,
-      note: form.note.trim(),
-    });
-    setForm({
-      title: "",
-      amount: "",
-      category: EXPENSE_CATEGORIES[0],
-      date: todayISO(),
-      note: "",
-    });
+    if (!form.title.trim() || !Number(form.amount)) return;
+    store.addExpense({ title: form.title.trim(), amount: Number(form.amount), category: form.category, date: new Date().toISOString().slice(0, 10) });
+    setForm({ title: "", amount: "", category: "Boletos" });
+    setOpen(false);
   }
 
-  async function deleteExpense(ex) {
-    if (window.confirm(`¿Eliminar el gasto "${ex.title}"?`)) {
-      await removeItem("expenses", ex.id);
-    }
-  }
-
-  const sorted = [...expenses].sort((a, b) => (a.date < b.date ? 1 : -1));
+  const inputStyle = { width: "100%", padding: "11px 12px", borderRadius: 11, border: `1px solid ${t.border}`,
+    background: t.surfaceSolid, color: t.text, fontSize: 14, fontFamily: "Manrope, sans-serif", boxSizing: "border-box" };
 
   return (
-    <div className="stack">
+    <div className="stagger" style={{ display: "flex", flexDirection: "column", gap: 14, padding: "6px 16px 24px" }}>
       <Card>
-        <div className="row-between">
-          <strong>Saldo disponible</strong>
-          <span className="big-balance" style={{ color: stats.balance < 0 ? "#dc2626" : "#16a34a" }}>
-            {money(stats.balance)}
-          </span>
-        </div>
-        <div className="small muted">
-          Recaudado {money(stats.totalRaised)} − gastado {money(stats.totalSpent)}
-        </div>
-      </Card>
-
-      <Card>
-        <strong>Registrar gasto</strong>
-        <form className="form-grid" onSubmit={addExpense}>
-          <input
-            className="input"
-            placeholder="Concepto (ej. Boletos fase de grupos)"
-            value={form.title}
-            onChange={(e) => setForm({ ...form, title: e.target.value })}
-            maxLength={80}
-          />
-          <div className="form-row">
-            <input
-              className="input"
-              type="number"
-              inputMode="decimal"
-              placeholder="Monto"
-              value={form.amount}
-              onChange={(e) => setForm({ ...form, amount: e.target.value })}
-              min="0"
-              step="0.01"
-            />
-            <select
-              className="input"
-              value={form.category}
-              onChange={(e) => setForm({ ...form, category: e.target.value })}
-            >
-              {EXPENSE_CATEGORIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-            <input
-              className="input"
-              type="date"
-              value={form.date}
-              onChange={(e) => setForm({ ...form, date: e.target.value })}
-            />
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <div style={{ fontSize: 11, color: t.muted, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em" }}>Total gastado</div>
+            <div style={{ fontFamily: "Anton", fontSize: 32, color: t.danger, marginTop: 2 }}>{money(stats.totalSpent)}</div>
+            <div style={{ fontSize: 12, color: t.muted }}>de {money(stats.totalRaised)} recaudados · saldo <b style={{ color: t.text }}>{money(stats.balance)}</b></div>
           </div>
-          <input
-            className="input"
-            placeholder="Nota (opcional)"
-            value={form.note}
-            onChange={(e) => setForm({ ...form, note: e.target.value })}
-            maxLength={120}
-          />
-          <button className="btn btn-primary" type="submit">
-            Agregar gasto
+          <button onClick={() => setOpen((o) => !o)} style={{ all: "unset", cursor: "pointer",
+            background: t.accent, color: t.onAccent, fontWeight: 800, fontSize: 13, padding: "10px 16px", borderRadius: 12 }}>
+            {open ? "Cancelar" : "+ Gasto"}
           </button>
-        </form>
+        </div>
+
+        {open && (
+          <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 9, marginTop: 14 }}>
+            <input style={inputStyle} placeholder="¿En qué se gastó?" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
+            <div style={{ display: "flex", gap: 9 }}>
+              <input style={{ ...inputStyle, flex: 1 }} placeholder="Monto $" inputMode="numeric" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value.replace(/[^0-9]/g, "") })} />
+              <select style={{ ...inputStyle, flex: 1 }} value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
+                {cats.map((c) => <option key={c} value={c}>{EXPENSE_CATS[c]} {c}</option>)}
+              </select>
+            </div>
+            <button type="submit" style={{ all: "unset", cursor: "pointer", textAlign: "center",
+              background: t.accent, color: t.onAccent, fontWeight: 800, padding: "11px", borderRadius: 12 }}>Registrar gasto</button>
+          </form>
+        )}
       </Card>
 
-      {sorted.length === 0 ? (
-        <EmptyState icon="🧾" title="Aún no hay gastos">
-          Cuando empiecen a comprar boletos, vuelos u hospedaje, regístralo aquí.
-        </EmptyState>
-      ) : (
-        <Card>
-          <strong>Historial de gastos ({sorted.length})</strong>
-          <div className="expense-list">
-            {sorted.map((ex) => (
-              <div key={ex.id} className="expense-item">
-                <div className={`expense-cat cat-${(ex.category || "otros").toLowerCase()}`}>
-                  {ex.category || "Otros"}
+      <div>
+        <SectionTitle>🧾 Movimientos ({expenses.length})</SectionTitle>
+        {expenses.length === 0 ? (
+          <Card><div style={{ textAlign: "center", color: t.muted, padding: "20px 0", fontSize: 13 }}>Aún no hay gastos. El fondo está intacto 💰</div></Card>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+            {expenses.map((ex) => (
+              <div key={ex.id} style={{ display: "flex", alignItems: "center", gap: 12, background: t.surface, border: `1px solid ${t.border}`, borderRadius: 14, padding: "11px 13px" }}>
+                <span style={{ width: 40, height: 40, borderRadius: 11, display: "grid", placeItems: "center", fontSize: 19,
+                  background: t.emptyCell, flexShrink: 0 }}>{EXPENSE_CATS[ex.category] || "📦"}</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 700, fontSize: 13.5, color: t.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ex.title}</div>
+                  <div style={{ fontSize: 11, color: t.muted }}>{ex.category} · {new Date(ex.date).toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "2-digit" })}</div>
                 </div>
-                <div className="expense-info">
-                  <div className="row-between">
-                    <span className="expense-title">{ex.title}</span>
-                    <strong>{money(ex.amount)}</strong>
-                  </div>
-                  <div className="small muted">
-                    {ex.date ? formatDate(ex.date) : "—"}
-                    {ex.note ? ` · ${ex.note}` : ""}
-                  </div>
-                </div>
-                <button
-                  className="icon-btn danger"
-                  onClick={() => deleteExpense(ex)}
-                  aria-label="Eliminar gasto"
-                >
-                  🗑
-                </button>
+                <span style={{ fontFamily: "Anton", fontSize: 18, color: t.danger }}>−{money(ex.amount)}</span>
+                <button onClick={() => store.removeExpense(ex.id)} style={{ all: "unset", cursor: "pointer", color: t.faint, fontSize: 15, padding: 4 }}>✕</button>
               </div>
             ))}
           </div>
-        </Card>
-      )}
+        )}
+      </div>
     </div>
   );
 }

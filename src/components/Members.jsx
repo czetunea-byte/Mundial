@@ -1,81 +1,58 @@
+// Pantalla EQUIPO — integrantes, totales, alta/baja.
 import { useState } from "react";
-import { Card, Avatar, EmptyState } from "./ui";
-import { formatMoney } from "../utils/format";
-import { addItem, removeItem } from "../data/store";
-import { MEMBER_COLORS } from "../config/app";
+import { useTheme } from "../theme.jsx";
+import { Card, SectionTitle, Avatar } from "./ui.jsx";
+import { money } from "../utils/format";
 
-export default function Members({ members, settings, stats }) {
+export default function Members({ store }) {
+  const t = useTheme();
+  const { stats, members } = store;
   const [name, setName] = useState("");
+  const byId = Object.fromEntries(stats.perMember.map((p) => [p.member.id, p]));
 
-  async function addMember(e) {
+  const inputStyle = { flex: 1, padding: "11px 12px", borderRadius: 11, border: `1px solid ${t.border}`,
+    background: t.surfaceSolid, color: t.text, fontSize: 14, fontFamily: "Manrope, sans-serif", boxSizing: "border-box" };
+
+  function add(e) {
     e.preventDefault();
-    const trimmed = name.trim();
-    if (!trimmed) return;
-    const color = MEMBER_COLORS[members.length % MEMBER_COLORS.length];
-    await addItem("members", { name: trimmed, color });
+    if (!name.trim()) return;
+    store.addMember(name.trim());
     setName("");
   }
 
-  async function deleteMember(m) {
-    const ok = window.confirm(
-      `¿Eliminar a ${m.name}? Esto NO borra sus aportaciones ya registradas.`
-    );
-    if (ok) await removeItem("members", m.id);
-  }
-
-  const money = (v) => formatMoney(v, settings);
-
   return (
-    <div className="stack">
+    <div className="stagger" style={{ display: "flex", flexDirection: "column", gap: 14, padding: "6px 16px 24px" }}>
       <Card>
-        <strong>Agregar integrante</strong>
-        <form className="inline-form" onSubmit={addMember}>
-          <input
-            className="input"
-            placeholder="Nombre del amigo"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            maxLength={40}
-          />
-          <button className="btn btn-primary" type="submit">
-            Agregar
-          </button>
+        <SectionTitle>➕ Sumar a la banda</SectionTitle>
+        <form onSubmit={add} style={{ display: "flex", gap: 9 }}>
+          <input style={inputStyle} placeholder="Nombre del compa" value={name} onChange={(e) => setName(e.target.value)} maxLength={40} />
+          <button type="submit" style={{ all: "unset", cursor: "pointer", background: t.accent, color: t.onAccent, fontWeight: 800, fontSize: 13, padding: "0 18px", borderRadius: 12 }}>Agregar</button>
         </form>
+        <div style={{ fontSize: 11, color: t.muted, marginTop: 9 }}>📷 Las fotos se cargan con cada integrante (próximamente editable).</div>
       </Card>
 
-      {members.length === 0 ? (
-        <EmptyState icon="🧑‍🤝‍🧑" title="Todavía no hay nadie">
-          Agrega a los integrantes del fondo arriba.
-        </EmptyState>
-      ) : (
-        <Card>
-          <strong>Integrantes ({members.length})</strong>
-          <div className="member-status-list">
-            {stats.perMember.map((p) => (
-              <div key={p.member.id} className="member-status">
-                <Avatar name={p.member.name} color={p.member.color} size={36} />
-                <div className="member-status-info">
-                  <div className="row-between">
-                    <span className="member-status-name">{p.member.name}</span>
-                    <strong>{money(p.total)}</strong>
-                  </div>
-                  <div className="small muted">
-                    {p.paidCount} semanas · {p.upToDate ? "al corriente" : `debe ${money(p.owed)}`}
+      <div>
+        <SectionTitle>👥 Plantel ({members.length})</SectionTitle>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {members.map((m) => {
+            const p = byId[m.id] || { total: 0, paidCount: 0, owed: 0, upToDate: true };
+            return (
+              <div key={m.id} style={{ display: "flex", alignItems: "center", gap: 12, background: t.surface, border: `1px solid ${t.border}`, borderRadius: 16, padding: "12px 14px" }}>
+                <Avatar member={m} size={46} badge={!m.photo} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 800, fontSize: 14, color: t.text }}>{m.name}</div>
+                  <div style={{ fontSize: 11.5, color: t.muted, marginTop: 2 }}>
+                    {p.paidCount} semanas · {p.upToDate ? <span style={{ color: t.accent }}>al corriente ✓</span> : <span style={{ color: t.danger }}>debe {money(p.owed)}</span>}
                   </div>
                 </div>
-                <button
-                  className="icon-btn danger"
-                  onClick={() => deleteMember(p.member)}
-                  aria-label={`Eliminar ${p.member.name}`}
-                  title="Eliminar"
-                >
-                  🗑
-                </button>
+                <span style={{ fontFamily: "Anton", fontSize: 18, color: t.accent }}>{money(p.total)}</span>
+                <button onClick={() => { if (confirm(`¿Quitar a ${m.name}? No borra sus aportaciones.`)) store.removeMember(m.id); }}
+                  style={{ all: "unset", cursor: "pointer", color: t.faint, fontSize: 15, padding: 4 }}>🗑</button>
               </div>
-            ))}
-          </div>
-        </Card>
-      )}
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }

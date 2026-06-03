@@ -1,22 +1,25 @@
-// Formateo de dinero.
+// Formateo de dinero y helpers de texto.
 
-export function formatMoney(amount, settings) {
-  const value = Number(amount) || 0;
-  const formatted = value.toLocaleString("es-MX", {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  });
-  const symbol = settings?.currency ?? "$";
-  return `${symbol}${formatted}`;
+// "$1,234" — redondeado, formato es-MX.
+export function money(n) {
+  return "$" + Math.round(Number(n) || 0).toLocaleString("es-MX");
 }
 
-export function formatMoneyShort(amount, settings) {
-  const value = Number(amount) || 0;
+// Iniciales (máx 2 letras) a partir del nombre.
+export function initials(name = "") {
+  return name
+    .split(" ")
+    .map((w) => w[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+}
+
+// Compat: formateo con settings (se sigue usando en utils antiguos).
+export function formatMoney(amount, settings) {
   const symbol = settings?.currency ?? "$";
-  if (Math.abs(value) >= 1000) {
-    return `${symbol}${(value / 1000).toLocaleString("es-MX", {
-      maximumFractionDigits: 1,
-    })}k`;
-  }
-  return `${symbol}${value.toLocaleString("es-MX")}`;
+  return `${symbol}${(Number(amount) || 0).toLocaleString("es-MX", {
+    maximumFractionDigits: 2,
+  })}`;
 }

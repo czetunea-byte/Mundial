@@ -9,14 +9,19 @@ export function computeFund({ members, contributions, expenses, settings }) {
 
   // Cuota vigente para cada semana (puede variar por tramos).
   const quotaByWeek = weeks.map((w) => quotaForDate(w.start, settings));
+  // Adjunta la cuota a cada semana (las pantallas la usan).
+  weeks.forEach((w, i) => { w.quota = quotaByWeek[i]; });
   const curIdx = currentWeekIndex(settings.startDate);
   const currentWeek = Math.min(Math.max(curIdx, 0), Math.max(totalWeeks - 1, 0));
   const weeksElapsed = Math.min(Math.max(curIdx + 1, 0), totalWeeks);
 
-  // Mapa rápido: clave "memberId|weekIndex" -> contribución
+  // Mapa rápido + objeto plano: clave "memberId|weekIndex"
   const paidMap = new Map();
+  const paid = {};
   for (const c of contributions) {
-    paidMap.set(`${c.memberId}|${c.weekIndex}`, c);
+    const key = `${c.memberId}|${c.weekIndex}`;
+    paidMap.set(key, c);
+    paid[key] = true;
   }
 
   const totalRaised = contributions.reduce((s, c) => s + (Number(c.amount) || 0), 0);
@@ -49,10 +54,15 @@ export function computeFund({ members, contributions, expenses, settings }) {
       total,
       paidCount: paidWeeks.size,
       pendingWeeks,
+      paidWeeks,
       owed,
       upToDate: owed === 0,
     };
   });
+
+  // Ranking (tabla de goleo) y quién falta esta semana.
+  const ranking = [...perMember].sort((a, b) => b.total - a.total || a.owed - b.owed);
+  const pendingThisWeek = members.filter((m) => !paid[`${m.id}|${currentWeek}`]);
 
   // Acumulado real del fondo + meta planeada, semana a semana (para la gráfica)
   const cumulativeByWeek = [];
@@ -97,6 +107,7 @@ export function computeFund({ members, contributions, expenses, settings }) {
     notStarted: curIdx < 0,
     finished: curIdx >= totalWeeks,
     paidMap,
+    paid,
     quotaByWeek,
     currentQuota: quotaByWeek[currentWeek] || settings.weeklyAmount,
     totalRaised,
@@ -105,9 +116,13 @@ export function computeFund({ members, contributions, expenses, settings }) {
     goal,
     progress: goal > 0 ? Math.min(totalRaised / goal, 1) : 0,
     perMember,
+    ranking,
+    pendingThisWeek,
     cumulativeByWeek,
+    cumulative: cumulativeByWeek,
     plannedToDate,
     pace,
     expensesByCategory: byCategory,
+    byCategory,
   };
 }

@@ -1,191 +1,103 @@
-import { Card, EmptyState, Avatar, GoalMeter, CountUp } from "./ui";
-import { formatMoney, formatMoneyShort } from "../utils/format";
-import { exportFundPdf } from "../utils/exportPdf";
-import { MEMBER_COLORS } from "../config/app";
+// Pantalla REPORTES — avance real vs meta, ritmo, gastos por categoría.
+import { useTheme } from "../theme.jsx";
+import { Card, Pill, SectionTitle, Avatar, CountUp } from "./ui.jsx";
+import { money } from "../utils/format";
+import { EXPENSE_CATS } from "../config/app";
 
-// Gráfica de barras animada (aportado por integrante)
-function BarChart({ data, settings, max }) {
+export default function Reports({ store }) {
+  const t = useTheme();
+  const { stats } = store;
+
+  // La gráfica muestra SIEMPRE la trayectoria del plan (proyección a la meta,
+  // todas las semanas) de fondo, y el avance real se va dibujando encima.
+  const W = 320, H = 150, pad = 6;
+  const totalW = stats.totalWeeks;
+  const maxV = Math.max(stats.goal, 1);
+  const xFor = (i) => pad + (i / Math.max(totalW - 1, 1)) * (W - pad * 2);
+  const yFor = (v) => H - pad - (v / maxV) * (H - pad * 2);
+  const planPts = stats.cumulative.map((d) => `${xFor(d.week)},${yFor(d.planned)}`).join(" ");
+  const realData = stats.cumulative.filter((d) => d.real != null);
+  const realPts = realData.map((d) => `${xFor(d.week)},${yFor(d.real)}`).join(" ");
+  const hasReal = realData.length >= 2;
+
+  const cats = Object.entries(stats.byCategory).sort((a, b) => b[1] - a[1]);
+  const maxCat = Math.max(1, ...cats.map(([, v]) => v));
+  const onPace = stats.pace >= 0.99;
+
   return (
-    <div className="bars">
-      {data.map((p) => (
-        <div key={p.member.id} className="bar-row">
-          <span className="bar-label">
-            <Avatar name={p.member.name} color={p.member.color} size={22} />
-            {p.member.name}
-          </span>
-          <div className="bar-track">
-            <div
-              className="bar-fill grow"
-              style={{
-                width: `${max > 0 ? (p.total / max) * 100 : 0}%`,
-                background: p.member.color,
-              }}
-            />
-          </div>
-          <span className="bar-value">{formatMoney(p.total, settings)}</span>
+    <div className="stagger" style={{ display: "flex", flexDirection: "column", gap: 14, padding: "6px 16px 24px" }}>
+      <div style={{ borderRadius: 18, padding: 18, color: "#fff", position: "relative", overflow: "hidden",
+        background: `linear-gradient(135deg, ${t.accentDeep}, ${t.accent})` }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontWeight: 800, fontSize: 13, gap: 8 }}>
+          <span style={{ whiteSpace: "nowrap" }}>🏆 Meta del fondo</span><span style={{ opacity: 0.9 }}><CountUp value={stats.progress * 100} format={(n) => n.toFixed(1)} />%</span>
         </div>
-      ))}
-    </div>
-  );
-}
-
-// Gráfica "meta vs avance": línea planeada (meta) vs línea real, animada.
-function GoalChart({ points, goal, settings }) {
-  const W = 560;
-  const H = 200;
-  const pad = 6;
-  const n = points.length;
-  if (n < 2) return <p className="muted small">Aún no hay suficientes datos.</p>;
-
-  const maxY = Math.max(goal, ...points.map((p) => p.planned), 1);
-  const x = (i) => pad + (i / (n - 1)) * (W - pad * 2);
-  const y = (v) => H - pad - (v / maxY) * (H - pad * 2);
-
-  // Línea de meta (planeada): todas las semanas
-  const plannedPath = points
-    .map((p, i) => `${i === 0 ? "M" : "L"} ${x(i)} ${y(p.planned)}`)
-    .join(" ");
-
-  // Línea real: solo hasta donde hay datos (real != null)
-  const realPts = points.filter((p) => p.real !== null);
-  const realPath = realPts
-    .map((p, i) => `${i === 0 ? "M" : "L"} ${x(p.week)} ${y(p.real)}`)
-    .join(" ");
-  const realArea =
-    realPts.length > 1
-      ? `${realPath} L ${x(realPts[realPts.length - 1].week)} ${H - pad} L ${x(
-          realPts[0].week
-        )} ${H - pad} Z`
-      : "";
-
-  const lastReal = realPts[realPts.length - 1];
-
-  return (
-    <div>
-      <svg viewBox={`0 0 ${W} ${H}`} className="goalchart" preserveAspectRatio="none">
-        {realArea && <path d={realArea} fill="rgba(0,104,71,0.12)" />}
-        {/* Meta: dorada punteada */}
-        <path
-          className="line-planned"
-          d={plannedPath}
-          fill="none"
-          stroke="#c9a227"
-          strokeWidth="2.5"
-          strokeDasharray="7 6"
-        />
-        {/* Real: verde sólida, con animación de dibujo */}
-        <path
-          className="line-real"
-          d={realPath}
-          fill="none"
-          stroke="#006847"
-          strokeWidth="3"
-        />
-        {lastReal && (
-          <circle className="dot-real" cx={x(lastReal.week)} cy={y(lastReal.real)} r="4.5" fill="#006847" />
-        )}
-      </svg>
-      <div className="legend">
-        <span className="legend-item">
-          <i style={{ background: "#006847" }} /> Lo que llevamos
-        </span>
-        <span className="legend-item">
-          <i className="dash" style={{ background: "#c9a227" }} /> Meta planeada
-        </span>
-        <span className="muted">Meta final: {formatMoneyShort(goal, settings)}</span>
+        <div style={{ fontFamily: "Anton", fontSize: 38, margin: "8px 0 2px" }}>$<CountUp value={stats.totalRaised} /></div>
+        <div style={{ fontSize: 13, opacity: 0.92, marginBottom: 14 }}>de {money(stats.goal)} · faltan $<CountUp value={stats.goal - stats.totalRaised} /></div>
+        <div style={{ position: "relative", height: 12, borderRadius: 999, background: "rgba(255,255,255,0.25)", overflow: "hidden" }}>
+          <div className="barfill" style={{ position: "absolute", inset: 0, width: `${stats.progress * 100}%`, borderRadius: 999, background: "linear-gradient(90deg,#ffe08a,#fff)" }} />
+        </div>
       </div>
-    </div>
-  );
-}
 
-export default function Reports({ members, settings, stats, expenses }) {
-  const money = (v) => formatMoney(v, settings);
-
-  if (members.length === 0) {
-    return (
-      <EmptyState icon="📊" title="Sin datos todavía">
-        Agrega integrantes y registra aportaciones para ver los reportes.
-      </EmptyState>
-    );
-  }
-
-  const maxMember = Math.max(...stats.perMember.map((p) => p.total), 1);
-  const categories = Object.entries(stats.expensesByCategory).sort((a, b) => b[1] - a[1]);
-  const maxCat = Math.max(...categories.map(([, v]) => v), 1);
-  const pacePct = Math.round((stats.pace || 1) * 100);
-  const onPace = (stats.pace || 1) >= 0.98;
-
-  return (
-    <div className="stack">
-      {/* Meta final, en grande y animada */}
-      <Card className="goal-hero">
-        <div className="goal-hero-top">
-          <span>🏆 Meta final del fondo</span>
-          <button
-            className="btn btn-light"
-            onClick={() => exportFundPdf({ settings, stats, expenses })}
-          >
-            ⬇ PDF
-          </button>
-        </div>
-        <div className="goal-hero-amount">
-          {settings.currency}
-          <CountUp value={stats.goal} format={(n) => Math.round(n).toLocaleString("es-MX")} />
-        </div>
-        <div className="goal-hero-sub">
-          Llevamos <strong>{money(stats.totalRaised)}</strong> · faltan{" "}
-          {money(Math.max(stats.goal - stats.totalRaised, 0))}
-        </div>
-        <GoalMeter
-          value={stats.goal > 0 ? stats.totalRaised / stats.goal : 0}
-          leftLabel="Inicio"
-          rightLabel="¡Mundial! 🇲🇽"
-          big
-        />
-      </Card>
-
-      {/* Ritmo */}
       <Card>
-        <div className="row-between">
-          <strong>¿Cómo vamos?</strong>
-          <span className={onPace ? "pill pill-ok" : "pill pill-warn"}>
-            {onPace ? "Vamos al corriente ✅" : `Vamos al ${pacePct}% del plan`}
-          </span>
+        <SectionTitle right={<Pill tone={onPace ? "ok" : "warn"}>{onPace ? "En ritmo ✓" : "Vamos atrás"}</Pill>}>📈 Avance vs. plan</SectionTitle>
+        <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: 150, display: "block" }}>
+          {/* Proyección/plan: trayectoria completa hacia la meta (de fondo) */}
+          <polyline points={planPts} fill="none" stroke={t.gold} strokeWidth="2.5" strokeDasharray="5 5" opacity="0.85" />
+          {/* Avance real: se dibuja encima conforme avanzan las semanas */}
+          {hasReal && (
+            <polyline className="draw-line" points={realPts} pathLength="100" fill="none" stroke={t.accent} strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" />
+          )}
+          {realData.length > 0 && (
+            <circle className="pop-dot" cx={xFor(stats.currentWeek)} cy={yFor(stats.totalRaised)} r="4.5" fill={t.accent} />
+          )}
+        </svg>
+        <div style={{ display: "flex", gap: 16, fontSize: 11.5, color: t.muted, marginTop: 4 }}>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><i style={{ width: 16, height: 3, background: t.accent, borderRadius: 2 }} />Avance real</span>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><i style={{ width: 16, borderTop: `3px dashed ${t.gold}` }} />Plan (proyección)</span>
         </div>
-        <p className="small muted" style={{ marginTop: 6 }}>
-          A la fecha deberíamos llevar <strong>{money(stats.plannedToDate)}</strong> y
-          llevamos <strong>{money(stats.totalRaised)}</strong>.
-        </p>
-        <GoalChart points={stats.cumulativeByWeek} goal={stats.goal} settings={settings} />
+        <div style={{ fontSize: 12, color: t.text, marginTop: 8, fontWeight: 600 }}>
+          Llevan el <b style={{ color: onPace ? t.accent : t.danger }}><CountUp value={stats.pace * 100} format={(n) => Math.round(n)} />%</b> de lo planeado a la fecha.
+          {onPace ? " ¡Así se hace, banda! 🔥" : " ¡Aguas, hay que apretar! 😅"}
+        </div>
       </Card>
 
       <Card>
-        <strong>Aportado por integrante</strong>
-        <BarChart data={stats.perMember} settings={settings} max={maxMember} />
-      </Card>
-
-      {categories.length > 0 && (
-        <Card>
-          <strong>Gastos por categoría</strong>
-          <div className="bars" style={{ marginTop: 10 }}>
-            {categories.map(([cat, val], i) => (
-              <div key={cat} className="bar-row">
-                <span className="bar-label">{cat}</span>
-                <div className="bar-track">
-                  <div
-                    className="bar-fill grow"
-                    style={{
-                      width: `${(val / maxCat) * 100}%`,
-                      background: MEMBER_COLORS[i % MEMBER_COLORS.length],
-                    }}
-                  />
-                </div>
-                <span className="bar-value">{money(val)}</span>
+        <SectionTitle>🧾 Gastos por categoría</SectionTitle>
+        {cats.length === 0 ? (
+          <div style={{ color: t.muted, fontSize: 13, padding: "10px 0" }}>Sin gastos todavía.</div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {cats.map(([c, v]) => (
+              <div key={c} style={{ display: "grid", gridTemplateColumns: "92px 1fr auto", alignItems: "center", gap: 10, fontSize: 12.5 }}>
+                <span style={{ color: t.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{EXPENSE_CATS[c]} {c}</span>
+                <span style={{ height: 14, borderRadius: 999, background: t.emptyCell, overflow: "hidden" }}>
+                  <span className="barfill" style={{ display: "block", height: "100%", width: `${(v / maxCat) * 100}%`, borderRadius: 999, background: `linear-gradient(90deg,${t.accentDeep},${t.accent})` }} />
+                </span>
+                <span style={{ fontWeight: 700, color: t.text, whiteSpace: "nowrap" }}>$<CountUp value={v} /></span>
               </div>
             ))}
           </div>
-        </Card>
-      )}
+        )}
+      </Card>
+
+      <Card>
+        <SectionTitle>👥 Aportado por integrante</SectionTitle>
+        <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+          {stats.ranking.map((p) => {
+            const max = stats.ranking[0]?.total || 1;
+            return (
+              <div key={p.member.id} style={{ display: "grid", gridTemplateColumns: "24px 1fr auto", alignItems: "center", gap: 9 }}>
+                <Avatar member={p.member} size={24} badge={false} />
+                <span style={{ height: 14, borderRadius: 999, background: t.emptyCell, overflow: "hidden" }}>
+                  <span className="barfill" style={{ display: "block", height: "100%", width: `${(p.total / max) * 100}%`, borderRadius: 999,
+                    background: `linear-gradient(90deg, oklch(0.5 0.15 ${p.member.hue}), oklch(0.66 0.16 ${p.member.hue}))` }} />
+                </span>
+                <span style={{ fontWeight: 700, color: t.text, fontSize: 12.5, whiteSpace: "nowrap" }}>$<CountUp value={p.total} /></span>
+              </div>
+            );
+          })}
+        </div>
+      </Card>
     </div>
   );
 }
