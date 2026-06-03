@@ -68,7 +68,9 @@ export default function Expenses({ store }) {
                   <div style={{ fontSize: 11, color: t.muted }}>{ex.category} · {new Date(ex.date).toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "2-digit" })}</div>
                 </div>
                 <span style={{ fontFamily: "Anton", fontSize: 18, color: t.danger }}>−{money(ex.amount)}</span>
-                <button onClick={() => store.removeExpense(ex.id)} style={{ all: "unset", cursor: "pointer", color: t.faint, fontSize: 15, padding: 4 }}>✕</button>
+                {store.canEdit(ex) && (
+                  <button onClick={() => store.removeExpense(ex.id)} style={{ all: "unset", cursor: "pointer", color: t.faint, fontSize: 15, padding: 4 }}>✕</button>
+                )}
               </div>
             ))}
           </div>

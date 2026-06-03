@@ -1,10 +1,9 @@
 // Configuración del fondo (estilo del rediseño). Editable por el admin.
 import { useState } from "react";
 import { useTheme } from "../theme.jsx";
-import { updateSettings } from "../data/store";
 import { sortedTiers } from "../utils/quota";
 
-export default function SettingsModal({ settings, onClose }) {
+export default function SettingsModal({ settings, onSave, onClose }) {
   const t = useTheme();
   const [form, setForm] = useState({
     fundName: settings.fundName,
@@ -39,7 +38,7 @@ export default function SettingsModal({ settings, onClose }) {
       .filter((tr) => tr.from && Number(tr.amount) >= 0)
       .map((tr) => ({ from: tr.from, amount: Number(tr.amount) }))
       .sort((a, b) => (a.from < b.from ? -1 : 1));
-    await updateSettings({
+    await onSave({
       fundName: form.fundName.trim() || settings.fundName,
       startDate: form.startDate,
       targetDate: form.targetDate,

@@ -22,14 +22,16 @@ export default function Members({ store }) {
 
   return (
     <div className="stagger" style={{ display: "flex", flexDirection: "column", gap: 14, padding: "6px 16px 24px" }}>
-      <Card>
-        <SectionTitle>➕ Sumar a la banda</SectionTitle>
-        <form onSubmit={add} style={{ display: "flex", gap: 9 }}>
-          <input style={inputStyle} placeholder="Nombre del compa" value={name} onChange={(e) => setName(e.target.value)} maxLength={40} />
-          <button type="submit" style={{ all: "unset", cursor: "pointer", background: t.accent, color: t.onAccent, fontWeight: 800, fontSize: 13, padding: "0 18px", borderRadius: 12 }}>Agregar</button>
-        </form>
-        <div style={{ fontSize: 11, color: t.muted, marginTop: 9 }}>📷 Las fotos se cargan con cada integrante (próximamente editable).</div>
-      </Card>
+      {store.isAdmin && (
+        <Card>
+          <SectionTitle>➕ Sumar a la banda</SectionTitle>
+          <form onSubmit={add} style={{ display: "flex", gap: 9 }}>
+            <input style={inputStyle} placeholder="Nombre del compa" value={name} onChange={(e) => setName(e.target.value)} maxLength={40} />
+            <button type="submit" style={{ all: "unset", cursor: "pointer", background: t.accent, color: t.onAccent, fontWeight: 800, fontSize: 13, padding: "0 18px", borderRadius: 12 }}>Agregar</button>
+          </form>
+          <div style={{ fontSize: 11, color: t.muted, marginTop: 9 }}>Solo tú (admin) puedes editar el plantel.</div>
+        </Card>
+      )}
 
       <div>
         <SectionTitle>👥 Plantel ({members.length})</SectionTitle>
@@ -46,8 +48,10 @@ export default function Members({ store }) {
                   </div>
                 </div>
                 <span style={{ fontFamily: "Anton", fontSize: 18, color: t.accent }}>{money(p.total)}</span>
-                <button onClick={() => { if (confirm(`¿Quitar a ${m.name}? No borra sus aportaciones.`)) store.removeMember(m.id); }}
-                  style={{ all: "unset", cursor: "pointer", color: t.faint, fontSize: 15, padding: 4 }}>🗑</button>
+                {store.isAdmin && (
+                  <button onClick={() => { if (confirm(`¿Quitar a ${m.name}? No borra sus aportaciones.`)) store.removeMember(m.id); }}
+                    style={{ all: "unset", cursor: "pointer", color: t.faint, fontSize: 15, padding: 4 }}>🗑</button>
+                )}
               </div>
             );
           })}

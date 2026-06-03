@@ -1,0 +1,52 @@
+rules_version = '2';
+
+// Reglas de seguridad del Fondo Mundial.
+// - Solo los 8 integrantes (por su usuario) pueden leer/escribir.
+// - Pagos y gastos: solo quien los registró (createdBy) o el admin pueden
+//   editarlos/borrarlos.
+// - Plantel (members) y configuración (meta): solo el admin.
+// - Actividad: cualquiera del grupo puede agregar; nadie puede editar/borrar.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function uid() {
+      return request.auth.token.email.split('@')[0];
+    }
+    function allowed() {
+      return request.auth != null
+        && request.auth.token.email != null
+        && uid() in ['carlos','salomon','maurim','marri','arturo','caltum','mauricioy','chal'];
+    }
+    function isAdmin() {
+      return allowed() && uid() == 'carlos';
+    }
+
+    match /members/{id} {
+      allow read: if allowed();
+      allow write: if isAdmin();
+    }
+
+    match /meta/{id} {
+      allow read: if allowed();
+      allow write: if isAdmin();
+    }
+
+    match /contributions/{id} {
+      allow read: if allowed();
+      allow create: if allowed() && request.resource.data.createdBy == uid();
+      allow update, delete: if isAdmin() || (allowed() && resource.data.createdBy == uid());
+    }
+
+    match /expenses/{id} {
+      allow read: if allowed();
+      allow create: if allowed() && request.resource.data.createdBy == uid();
+      allow update, delete: if isAdmin() || (allowed() && resource.data.createdBy == uid());
+    }
+
+    match /activity/{id} {
+      allow read: if allowed();
+      allow create: if allowed();
+      allow update, delete: if false;
+    }
+  }
+}
