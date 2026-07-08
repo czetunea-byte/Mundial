@@ -21,10 +21,10 @@ export function celebrate(originEl, flavor = "confeti") {
   const cy = r.top + r.height / 2;
   const layer = fxLayer();
 
-  // Texto flotante
+  // Texto flotante (a veces sale el clásico "¡y si sí!")
   const pop = document.createElement("div");
   const labels = { confeti: "+$1,000", gol: "¡GOOOL! ⚽", moneda: "+$1,000 🪙", sello: "¡PAGÓ! ✓" };
-  pop.textContent = labels[flavor] || "+$1,000";
+  pop.textContent = Math.random() < 0.35 ? "¡y si sí! 💪" : (labels[flavor] || "+$1,000");
   pop.style.cssText = `position:absolute;left:${cx}px;top:${cy}px;transform:translate(-50%,-50%);
     font-family:Anton,sans-serif;font-size:${flavor === "gol" ? 34 : 26}px;color:#2de28c;
     text-shadow:0 0 16px rgba(45,226,140,0.7),0 2px 4px rgba(0,0,0,0.5);white-space:nowrap;

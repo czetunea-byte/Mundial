@@ -36,6 +36,11 @@ export const DEFAULT_MEMBERS = [
 
 // Frases echadoras que rotan por semana en el Resumen.
 export const PHRASES = [
+  "Ya ni llorar es bueno: cayó México, ¡pero el fondo NO! 🦅",
+  "El 2026 fue el calentamiento… en España 2030 SÍ es la buena 🔥",
+  "¿Que perdió México? Y si sí… por eso vamos por el 2030 🇲🇽",
+  "Y si sí, aquí seguimos — arriba ese ánimo, banda 💪",
+  "Y si sí, esta semana toca soltar la lana 😎",
   "¡¡EEEEH!! El fondo va con todo esta semana 🎉⚽",
   "Esta semana hasta el que debe va a pagar 💪",
   "El que no aporta, no va al palco 🏟️",
