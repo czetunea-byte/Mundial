@@ -51,7 +51,7 @@ export default function Login() {
             background: `linear-gradient(150deg,${t.accent},${t.accentDeep})`, fontSize: 28,
             boxShadow: t.name === "noche" ? `0 0 22px ${t.accentGlow}` : "0 2px 8px rgba(0,0,0,0.15)" }}>⚽</div>
           <div style={{ fontWeight: 800, fontSize: 22 }}>Fondo Mundial<span style={{ color: t.accent }}> 2030</span></div>
-          <div style={{ fontSize: 12.5, color: t.muted, marginTop: 4 }}>🦅 ¡Vamos México! · Entra para ver el fondo</div>
+          <div style={{ fontSize: 12.5, color: t.muted, marginTop: 4 }}>🦅 ¡Vamos México! · y si sí, entra al fondo 😎</div>
         </div>
 
         <div style={{ fontSize: 12, color: t.muted, fontWeight: 700, marginBottom: 10 }}>¿Quién eres?</div>

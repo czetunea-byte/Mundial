@@ -108,6 +108,10 @@ export default function Dashboard({ store, flavor }) {
           ))}
         </div>
       </div>
+
+      <div style={{ textAlign: "center", fontSize: 12.5, color: t.faint, fontWeight: 800, padding: "6px 0 2px", letterSpacing: "0.02em" }}>
+        y si sí 😎🇲🇽 — rumbo a España 2030
+      </div>
     </div>
   );
 }
