@@ -1,0 +1,37 @@
+name: Deploy a Firebase Hosting
+
+# Publica la app en Firebase Hosting (fondo-mundial.web.app) en cada push a main.
+# Firebase Hosting funciona bien en datos moviles, a diferencia de GitHub Pages.
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configurar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      # Sin BASE_PATH: Firebase Hosting sirve la app en la raiz "/".
+      - name: Construir
+        run: npm run build
+
+      - name: Desplegar a Firebase Hosting
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          channelId: live
+          projectId: fondo-mundial
