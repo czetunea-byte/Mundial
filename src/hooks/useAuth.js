@@ -10,7 +10,11 @@ export function useAuth() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    return onAuthStateChanged(auth, (u) => {
+    // Respaldo: si Firebase Auth no responde (red móvil lenta o bloqueada),
+    // igual mostramos la pantalla de login en vez de quedarnos en "Cargando…".
+    const fallback = setTimeout(() => setReady(true), 8000);
+
+    const unsub = onAuthStateChanged(auth, (u) => {
       if (u) {
         const id = idFromEmail(u.email);
         const m = DEFAULT_MEMBERS.find((x) => x.id === id);
@@ -18,8 +22,14 @@ export function useAuth() {
       } else {
         setUser(null);
       }
+      clearTimeout(fallback);
       setReady(true);
     });
+
+    return () => {
+      clearTimeout(fallback);
+      unsub();
+    };
   }, []);
 
   return { user, ready };
