@@ -32,3 +32,11 @@ export const EXPENSE_CATS = {
   Comida: "🌮",
   Otros: "📦",
 };
+
+// Categorías de ingresos extraordinarios (multas y otros extras) con su emoji.
+export const INCOME_CATS = {
+  "Multa por llegar tarde": "⏰",
+  "Otra multa": "🚫",
+  Cooperación: "🤝",
+  Otro: "💰",
+};

@@ -30,7 +30,7 @@ export default function Expenses({ store }) {
           <div>
             <div style={{ fontSize: 11, color: t.muted, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em" }}>Total gastado</div>
             <div style={{ fontFamily: "Anton", fontSize: 32, color: t.danger, marginTop: 2 }}>{money(stats.totalSpent)}</div>
-            <div style={{ fontSize: 12, color: t.muted }}>de {money(stats.totalRaised)} recaudados · saldo <b style={{ color: t.text }}>{money(stats.balance)}</b></div>
+            <div style={{ fontSize: 12, color: t.muted }}>de {money(stats.totalIn)} recaudados · saldo <b style={{ color: t.text }}>{money(stats.balance)}</b></div>
           </div>
           <button onClick={() => setOpen((o) => !o)} style={{ all: "unset", cursor: "pointer",
             background: t.accent, color: t.onAccent, fontWeight: 800, fontSize: 13, padding: "10px 16px", borderRadius: 12 }}>

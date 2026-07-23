@@ -7,6 +7,7 @@ import { Avatar } from "./ui.jsx";
 import Dashboard from "./Dashboard.jsx";
 import Contributions from "./Contributions.jsx";
 import Expenses from "./Expenses.jsx";
+import Incomes from "./Incomes.jsx";
 import Reports from "./Reports.jsx";
 import Members from "./Members.jsx";
 import Activity from "./Activity.jsx";
@@ -17,6 +18,7 @@ const TABS = [
   { key: "resumen", label: "Resumen", icon: "🏠" },
   { key: "aportaciones", label: "Cromos", icon: "📒" },
   { key: "gastos", label: "Gastos", icon: "🧾" },
+  { key: "ingresos", label: "Ingresos", icon: "💸" },
   { key: "reportes", label: "Reportes", icon: "📊" },
   { key: "actividad", label: "Actividad", icon: "📋" },
   { key: "equipo", label: "Equipo", icon: "👥" },
@@ -26,6 +28,7 @@ const SCREENS = {
   resumen: Dashboard,
   aportaciones: Contributions,
   gastos: Expenses,
+  ingresos: Incomes,
   reportes: Reports,
   actividad: Activity,
   equipo: Members,

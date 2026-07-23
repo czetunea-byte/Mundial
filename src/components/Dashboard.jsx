@@ -40,15 +40,21 @@ export default function Dashboard({ store, flavor }) {
       <CountdownHero target={target} subtitle={`Semana ${stats.currentWeek + 1} de ${stats.totalWeeks} · ¡rumbo a España 2030! ⚽`} />
 
       <div style={{ display: "flex", gap: 9 }}>
-        <Stat t={t} label="Recaudado" val={<>$<CountUp value={stats.totalRaised} /></>} color={t.accent} />
+        <Stat t={t} label="Recaudado" val={<>$<CountUp value={stats.totalIn} /></>} color={t.accent} />
         <Stat t={t} label="Saldo" val={<>$<CountUp value={stats.balance} /></>} color={t.text} />
         <Stat t={t} label="Gastado" val={<>$<CountUp value={stats.totalSpent} /></>} color={t.danger} />
       </div>
 
+      {stats.totalIncome > 0 && (
+        <div style={{ marginTop: -6, fontSize: 11.5, color: t.muted, textAlign: "center" }}>
+          Incluye <b style={{ color: t.accent }}>{money(stats.totalIncome)}</b> de multas y extras 💸
+        </div>
+      )}
+
       <Card>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8, marginBottom: 10 }}>
           <span style={{ fontWeight: 800, fontSize: 13, color: t.text, whiteSpace: "nowrap" }}>🏆 Rumbo a la meta</span>
-          <span style={{ color: t.muted, fontSize: 10.5, whiteSpace: "nowrap" }}>{money(stats.totalRaised)} / {money(stats.goal)}</span>
+          <span style={{ color: t.muted, fontSize: 10.5, whiteSpace: "nowrap" }}>{money(stats.totalIn)} / {money(stats.goal)}</span>
         </div>
         <ProgressBar pct={stats.progress} />
         <div style={{ fontSize: 11.5, color: t.accent, fontWeight: 700, marginTop: 9 }}>
