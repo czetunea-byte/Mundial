@@ -10,6 +10,7 @@ export function useFund() {
   const [rawMembers, setRawMembers] = useState([]);
   const [contributions, setContributions] = useState([]);
   const [expenses, setExpenses] = useState([]);
+  const [incomes, setIncomes] = useState([]);
   const [activity, setActivity] = useState([]);
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [loaded, setLoaded] = useState({ members: false, settings: false });
@@ -29,6 +30,12 @@ export function useFund() {
       }, onError),
       subscribeCollection("contributions", setContributions, onError),
       subscribeCollection("expenses", setExpenses, onError),
+      // Ingresos extra: si aún no se publican las reglas de Firestore para esta
+      // colección, no tumbamos toda la app; simplemente queda vacía.
+      subscribeCollection("incomes", setIncomes, (e) => {
+        console.warn("incomes no disponible (¿faltan reglas?)", e);
+        setIncomes([]);
+      }),
       subscribeCollection("activity", setActivity, onError),
       subscribeSettings((s) => {
         setSettings(s);
@@ -45,8 +52,8 @@ export function useFund() {
   );
 
   const stats = useMemo(
-    () => computeFund({ members, contributions, expenses, settings }),
-    [members, contributions, expenses, settings]
+    () => computeFund({ members, contributions, expenses, incomes, settings }),
+    [members, contributions, expenses, incomes, settings]
   );
 
   return {
@@ -54,6 +61,7 @@ export function useFund() {
     rawMembers,
     contributions,
     expenses,
+    incomes,
     activity,
     settings,
     stats,

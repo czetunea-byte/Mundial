@@ -43,6 +43,12 @@ service cloud.firestore {
       allow update, delete: if isAdmin() || (allowed() && resource.data.createdBy == uid());
     }
 
+    match /incomes/{id} {
+      allow read: if allowed();
+      allow create: if allowed() && request.resource.data.createdBy == uid();
+      allow update, delete: if isAdmin() || (allowed() && resource.data.createdBy == uid());
+    }
+
     match /activity/{id} {
       allow read: if allowed();
       allow create: if allowed();

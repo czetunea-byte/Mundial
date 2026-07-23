@@ -31,8 +31,8 @@ export default function Reports({ store }) {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontWeight: 800, fontSize: 13, gap: 8 }}>
           <span style={{ whiteSpace: "nowrap" }}>🏆 Meta del fondo</span><span style={{ opacity: 0.9 }}><CountUp value={stats.progress * 100} format={(n) => n.toFixed(1)} />%</span>
         </div>
-        <div style={{ fontFamily: "Anton", fontSize: 38, margin: "8px 0 2px" }}>$<CountUp value={stats.totalRaised} /></div>
-        <div style={{ fontSize: 13, opacity: 0.92, marginBottom: 14 }}>de {money(stats.goal)} · faltan $<CountUp value={stats.goal - stats.totalRaised} /></div>
+        <div style={{ fontFamily: "Anton", fontSize: 38, margin: "8px 0 2px" }}>$<CountUp value={stats.totalIn} /></div>
+        <div style={{ fontSize: 13, opacity: 0.92, marginBottom: 14 }}>de {money(stats.goal)} · faltan $<CountUp value={Math.max(stats.goal - stats.totalIn, 0)} /></div>
         <div style={{ position: "relative", height: 12, borderRadius: 999, background: "rgba(255,255,255,0.25)", overflow: "hidden" }}>
           <div className="barfill" style={{ position: "absolute", inset: 0, width: `${stats.progress * 100}%`, borderRadius: 999, background: "linear-gradient(90deg,#ffe08a,#fff)" }} />
         </div>

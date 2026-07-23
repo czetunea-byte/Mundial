@@ -3,7 +3,7 @@ import { buildWeeks, currentWeekIndex } from "./dates";
 import { quotaForDate } from "./quota";
 
 // Devuelve un objeto con todo lo calculado a partir de los datos crudos.
-export function computeFund({ members, contributions, expenses, settings }) {
+export function computeFund({ members, contributions, expenses, incomes = [], settings }) {
   const weeks = buildWeeks(settings.startDate, settings.targetDate);
   const totalWeeks = weeks.length;
 
@@ -24,9 +24,22 @@ export function computeFund({ members, contributions, expenses, settings }) {
     paid[key] = true;
   }
 
+  // Cuotas (aportaciones semanales). Sigue siendo la base de la "tabla de goleo"
+  // y del ritmo vs. plan.
   const totalRaised = contributions.reduce((s, c) => s + (Number(c.amount) || 0), 0);
   const totalSpent = expenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
-  const balance = totalRaised - totalSpent;
+  // Ingresos extraordinarios (multas, etc.): dinero real que suma al fondo.
+  const totalIncome = incomes.reduce((s, i) => s + (Number(i.amount) || 0), 0);
+  // Todo lo que ha entrado al fondo: cuotas + extras.
+  const totalIn = totalRaised + totalIncome;
+  const balance = totalIn - totalSpent;
+
+  // Ingresos extra acumulados por integrante (para la lista/ranking de multas).
+  const incomeByMember = {};
+  for (const inc of incomes) {
+    const mid = inc.memberId || "—";
+    incomeByMember[mid] = (incomeByMember[mid] || 0) + (Number(inc.amount) || 0);
+  }
 
   // Meta total: cada integrante aporta la cuota vigente de cada semana.
   const sumQuotas = quotaByWeek.reduce((s, q) => s + q, 0);
@@ -112,9 +125,13 @@ export function computeFund({ members, contributions, expenses, settings }) {
     currentQuota: quotaByWeek[currentWeek] || settings.weeklyAmount,
     totalRaised,
     totalSpent,
+    totalIncome,
+    totalIn,
+    incomeByMember,
     balance,
     goal,
-    progress: goal > 0 ? Math.min(totalRaised / goal, 1) : 0,
+    // La meta considera todo lo recaudado (cuotas + extras como multas).
+    progress: goal > 0 ? Math.min(totalIn / goal, 1) : 0,
     perMember,
     ranking,
     pendingThisWeek,

@@ -8,7 +8,7 @@ import { money } from "../utils/format";
 // registro" (createdBy), permisos (dueño o admin) y registro de actividad.
 export function useFundStore(user) {
   const fund = useFund();
-  const { members, contributions, expenses, activity, settings, stats, ready, error } = fund;
+  const { members, contributions, expenses, incomes, activity, settings, stats, ready, error } = fund;
 
   // Siembra el plantel cuando está vacío EN LA NUBE (solo el admin puede
   // escribirlo). Idempotente: usa ids fijos, así re-ejecutar no duplica.
@@ -69,6 +69,29 @@ export function useFundStore(user) {
         removeItem("expenses", id);
         log("gasto-quitar", `borró el gasto "${ex?.title || ""}"`);
       },
+      addIncome(inc) {
+        const amount = Number(inc.amount) || 0;
+        addItem("incomes", {
+          memberId: inc.memberId || "",
+          title: inc.title,
+          amount,
+          category: inc.category || "Otro",
+          date: inc.date || new Date().toISOString().slice(0, 10),
+          createdBy: user.id,
+        });
+        const quien = inc.memberId ? ` a ${nameOf(inc.memberId)}` : "";
+        log("ingreso", `registró un ingreso extra${quien}: "${inc.title}" (${money(amount)})`);
+      },
+      removeIncome(id) {
+        const inc = incomes.find((i) => i.id === id);
+        if (!canEdit(inc)) {
+          const owner = members.find((m) => m.id === inc?.createdBy)?.name || "quien lo registró";
+          window.alert(`Solo ${owner} (o el admin) puede borrar este ingreso.`);
+          return;
+        }
+        removeItem("incomes", id);
+        log("ingreso-quitar", `borró el ingreso extra "${inc?.title || ""}"`);
+      },
       addMember(name) {
         if (!user?.isAdmin) { window.alert("Solo el admin puede editar el plantel."); return; }
         const hue = (members.length * 47) % 360;
@@ -87,12 +110,13 @@ export function useFundStore(user) {
       // Para que las pantallas decidan si mostrar botón de borrar.
       canEdit,
     };
-  }, [stats, settings, members, expenses, user]);
+  }, [stats, settings, members, expenses, incomes, user]);
 
   return {
     members,
     contributions,
     expenses,
+    incomes,
     activity,
     settings,
     stats,

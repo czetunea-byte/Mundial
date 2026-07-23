@@ -14,7 +14,7 @@ function timeAgo(ts) {
   return new Date(ts).toLocaleDateString("es-MX", { day: "2-digit", month: "short" });
 }
 
-const ICONS = { pago: "✅", "pago-quitar": "↩️", gasto: "🧾", "gasto-quitar": "🗑️", miembro: "👤", "miembro-quitar": "👋", config: "⚙️" };
+const ICONS = { pago: "✅", "pago-quitar": "↩️", gasto: "🧾", "gasto-quitar": "🗑️", ingreso: "💸", "ingreso-quitar": "🗑️", miembro: "👤", "miembro-quitar": "👋", config: "⚙️" };
 
 export default function Activity({ store }) {
   const t = useTheme();
