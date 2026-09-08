@@ -49,6 +49,11 @@ service cloud.firestore {
       allow update, delete: if isAdmin() || (allowed() && resource.data.createdBy == uid());
     }
 
+    match /btcMoves/{id} {
+      allow read: if allowed();
+      allow create, update, delete: if isAdmin();
+    }
+
     match /activity/{id} {
       allow read: if allowed();
       allow create: if allowed();

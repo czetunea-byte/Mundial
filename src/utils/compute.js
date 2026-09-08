@@ -3,7 +3,7 @@ import { buildWeeks, currentWeekIndex } from "./dates";
 import { quotaForDate } from "./quota";
 
 // Devuelve un objeto con todo lo calculado a partir de los datos crudos.
-export function computeFund({ members, contributions, expenses, incomes = [], settings }) {
+export function computeFund({ members, contributions, expenses, incomes = [], btcMoves = [], settings }) {
   const weeks = buildWeeks(settings.startDate, settings.targetDate);
   const totalWeeks = weeks.length;
 
@@ -39,6 +39,18 @@ export function computeFund({ members, contributions, expenses, incomes = [], se
   for (const inc of incomes) {
     const mid = inc.memberId || "—";
     incomeByMember[mid] = (incomeByMember[mid] || 0) + (Number(inc.amount) || 0);
+  }
+
+  // Cripto (Bitcoin): movimientos de compra/venta. Modelo de flujo neto.
+  // El valor a pesos y el rendimiento se calculan aparte con el precio en vivo.
+  let btcHeld = 0;      // BTC actualmente en poder del fondo
+  let btcInvested = 0;  // pesos netos que salieron del efectivo hacia BTC
+  let btcBought = 0;    // pesos brutos gastados en comprar (base del %)
+  for (const mv of btcMoves) {
+    const sign = mv.type === "sell" ? -1 : 1;
+    btcHeld += sign * (Number(mv.btc) || 0);
+    btcInvested += sign * (Number(mv.mxn) || 0);
+    if (mv.type !== "sell") btcBought += Number(mv.mxn) || 0;
   }
 
   // Meta total: cada integrante aporta la cuota vigente de cada semana.
@@ -128,6 +140,9 @@ export function computeFund({ members, contributions, expenses, incomes = [], se
     totalIncome,
     totalIn,
     incomeByMember,
+    btcHeld,
+    btcInvested,
+    btcBought,
     balance,
     goal,
     // La meta considera todo lo recaudado (cuotas + extras como multas).

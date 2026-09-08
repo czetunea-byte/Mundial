@@ -8,7 +8,7 @@ import { money } from "../utils/format";
 // registro" (createdBy), permisos (dueño o admin) y registro de actividad.
 export function useFundStore(user) {
   const fund = useFund();
-  const { members, contributions, expenses, incomes, activity, settings, stats, ready, error } = fund;
+  const { members, contributions, expenses, incomes, btcMoves, activity, settings, stats, ready, error } = fund;
 
   // Siembra el plantel cuando está vacío EN LA NUBE (solo el admin puede
   // escribirlo). Idempotente: usa ids fijos, así re-ejecutar no duplica.
@@ -92,6 +92,28 @@ export function useFundStore(user) {
         removeItem("incomes", id);
         log("ingreso-quitar", `borró el ingreso extra "${inc?.title || ""}"`);
       },
+      addBtcMove(mv) {
+        if (!user?.isAdmin) { window.alert("Solo el admin puede registrar movimientos de cripto."); return; }
+        const type = mv.type === "sell" ? "sell" : "buy";
+        const btc = Number(mv.btc) || 0;
+        const mxn = Number(mv.mxn) || 0;
+        addItem("btcMoves", {
+          type,
+          btc,
+          mxn,
+          date: mv.date || new Date().toISOString().slice(0, 10),
+          createdBy: user.id,
+        });
+        const verbo = type === "sell" ? "vendió" : "compró";
+        log(type === "sell" ? "cripto-venta" : "cripto-compra",
+          `${verbo} ${btc} BTC por ${money(mxn)}`);
+      },
+      removeBtcMove(id) {
+        if (!user?.isAdmin) { window.alert("Solo el admin puede borrar movimientos de cripto."); return; }
+        const mv = btcMoves.find((m) => m.id === id);
+        removeItem("btcMoves", id);
+        log("cripto-quitar", `borró un movimiento de cripto (${mv?.type === "sell" ? "venta" : "compra"} de ${mv?.btc || 0} BTC)`);
+      },
       addMember(name) {
         if (!user?.isAdmin) { window.alert("Solo el admin puede editar el plantel."); return; }
         const hue = (members.length * 47) % 360;
@@ -110,13 +132,14 @@ export function useFundStore(user) {
       // Para que las pantallas decidan si mostrar botón de borrar.
       canEdit,
     };
-  }, [stats, settings, members, expenses, incomes, user]);
+  }, [stats, settings, members, expenses, incomes, btcMoves, user]);
 
   return {
     members,
     contributions,
     expenses,
     incomes,
+    btcMoves,
     activity,
     settings,
     stats,
