@@ -5,6 +5,14 @@ export function money(n) {
   return "$" + Math.round(Number(n) || 0).toLocaleString("es-MX");
 }
 
+// "₿0.09000000" — monto de bitcoin con decimales (hasta 8, mínimo 2).
+export function btc(n) {
+  return "₿" + (Number(n) || 0).toLocaleString("es-MX", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 8,
+  });
+}
+
 // Iniciales (máx 2 letras) a partir del nombre.
 export function initials(name = "") {
   return name

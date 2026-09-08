@@ -11,6 +11,7 @@ export function useFund() {
   const [contributions, setContributions] = useState([]);
   const [expenses, setExpenses] = useState([]);
   const [incomes, setIncomes] = useState([]);
+  const [btcMoves, setBtcMoves] = useState([]);
   const [activity, setActivity] = useState([]);
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [loaded, setLoaded] = useState({ members: false, settings: false });
@@ -36,6 +37,12 @@ export function useFund() {
         console.warn("incomes no disponible (¿faltan reglas?)", e);
         setIncomes([]);
       }),
+      // Movimientos de cripto: igual que incomes, tolerante a fallos si aún no
+      // se publican las reglas de Firestore para esta colección.
+      subscribeCollection("btcMoves", setBtcMoves, (e) => {
+        console.warn("btcMoves no disponible (¿faltan reglas?)", e);
+        setBtcMoves([]);
+      }),
       subscribeCollection("activity", setActivity, onError),
       subscribeSettings((s) => {
         setSettings(s);
@@ -52,8 +59,8 @@ export function useFund() {
   );
 
   const stats = useMemo(
-    () => computeFund({ members, contributions, expenses, incomes, settings }),
-    [members, contributions, expenses, incomes, settings]
+    () => computeFund({ members, contributions, expenses, incomes, btcMoves, settings }),
+    [members, contributions, expenses, incomes, btcMoves, settings]
   );
 
   return {
@@ -62,6 +69,7 @@ export function useFund() {
     contributions,
     expenses,
     incomes,
+    btcMoves,
     activity,
     settings,
     stats,

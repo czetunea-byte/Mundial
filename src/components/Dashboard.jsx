@@ -5,6 +5,7 @@ import { money } from "../utils/format";
 import { PHRASES } from "../config/members";
 import { roastFor } from "../utils/roasts";
 import { celebrate, resolveFlavor } from "../utils/fx";
+import CryptoCard from "./CryptoCard.jsx";
 
 function Stat({ t, label, val, color }) {
   return (
@@ -61,6 +62,8 @@ export default function Dashboard({ store, flavor }) {
           {(stats.progress * 100).toFixed(1)}% — ¡apenas arranca el partido, a meterle! 🔥
         </div>
       </Card>
+
+      <CryptoCard store={store} />
 
       <Card>
         <SectionTitle right={pending ? <Pill tone="warn">{pending} deben</Pill> : <Pill tone="ok">¡Todos al día! ✓</Pill>}>
